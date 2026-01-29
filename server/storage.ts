@@ -1,38 +1,42 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
+import { analysisResults, type AnalysisResult, type InsertAnalysisResult } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc } from "drizzle-orm";
+import { authStorage } from "./replit_integrations/auth";
+import { chatStorage } from "./replit_integrations/chat";
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  // Analysis Operations
+  getAnalysis(id: number): Promise<AnalysisResult | undefined>;
+  getAnalysesByUser(userId: string): Promise<AnalysisResult[]>;
+  createAnalysis(analysis: InsertAnalysisResult): Promise<AnalysisResult>;
+  deleteAnalysis(id: number): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
+export class DatabaseStorage implements IStorage {
+  async getAnalysis(id: number): Promise<AnalysisResult | undefined> {
+    const [result] = await db.select().from(analysisResults).where(eq(analysisResults.id, id));
+    return result;
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async getAnalysesByUser(userId: string): Promise<AnalysisResult[]> {
+    return await db
+      .select()
+      .from(analysisResults)
+      .where(eq(analysisResults.userId, userId))
+      .orderBy(desc(analysisResults.createdAt));
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async createAnalysis(analysis: InsertAnalysisResult): Promise<AnalysisResult> {
+    const [result] = await db.insert(analysisResults).values(analysis).returning();
+    return result;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async deleteAnalysis(id: number): Promise<void> {
+    await db.delete(analysisResults).where(eq(analysisResults.id, id));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
+// Re-export integration storages for convenience if needed, 
+// though they are usually imported directly.
+export { authStorage, chatStorage };
