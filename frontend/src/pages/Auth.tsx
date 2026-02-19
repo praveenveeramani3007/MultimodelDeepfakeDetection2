@@ -112,44 +112,26 @@ export default function Auth() {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
 
-    // Admin Fields
-    const [adminName, setAdminName] = useState("");
-    const [adminDob, setAdminDob] = useState("");
-    const [adminPassword, setAdminPassword] = useState("");
-    const [adminError, setAdminError] = useState("");
-
-    const { loginMutation, registerMutation, user } = useAuth();
-    const [, setLocation] = useLocation();
+    // Server Config State
+    const [showServerConfig, setShowServerConfig] = useState(false);
+    const [serverUrl, setServerUrl] = useState("");
 
     useEffect(() => {
-        if (user) {
-            setLocation("/");
-        }
-    }, [user, setLocation]);
+        // Load existing server URL
+        import("@/lib/api").then(api => {
+            setServerUrl(api.getApiUrl());
+        });
+    }, []);
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (isLogin) {
-            loginMutation.mutate({ username, password });
-        } else {
-            registerMutation.mutate({ username, password, firstName, lastName });
-        }
-    };
-
-    const isLoading = loginMutation.isPending || registerMutation.isPending;
-
-    const handleAdminSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        setAdminError("");
-
-        // UNIQUE CREDENTIALS CHECK
-        if (adminName === "praveenV" && adminDob === "300704" && adminPassword === "Vpraveen6374416934") {
-            // Store admin state in session storage (simple for this case)
-            sessionStorage.setItem("isAdminAuthenticated", "true");
-            setLocation("/admin-portal");
-        } else {
-            setAdminError("ACCESS DENIED: Credentials mismatch. Initiating failure protocol.");
-        }
+    const handleSaveServer = () => {
+        import("@/lib/api").then(api => {
+            let url = serverUrl.trim();
+            // Remove trailing slash
+            url = url.replace(/\/$/, "");
+            api.setApiUrl(url);
+            setShowServerConfig(false);
+            window.location.reload(); // Reload to apply changes
+        });
     };
 
     return (
@@ -264,23 +246,56 @@ export default function Auth() {
                             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
                             <CardHeader className="space-y-2 pt-8">
                                 <CardTitle className="text-2xl xxs:text-3xl font-display font-bold text-white">
-                                    {isAdminMode
+                                    {showServerConfig ? "Network Protocol" : (isAdminMode
                                         ? "Master Control Protocol"
-                                        : (isLogin ? "Welcome Analyst" : "Initialize Account")
+                                        : (isLogin ? "Welcome Analyst" : "Initialize Account"))
                                     }
                                 </CardTitle>
                                 <CardDescription className="text-slate-400 text-base">
-                                    {isAdminMode
+                                    {showServerConfig ? "Configure secure uplink to backend forensic core" : (isAdminMode
                                         ? "Enter privileged credentials to override system restrictions"
                                         : (isLogin
                                             ? "Securely sign in to your forensic environment"
-                                            : "Register for a workspace in the laboratory")
+                                            : "Register for a workspace in the laboratory"))
                                     }
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <AnimatePresence mode="wait">
-                                    {!isAdminMode ? (
+                                    {showServerConfig ? (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="flex flex-col gap-6"
+                                        >
+                                            <div className="space-y-2 group">
+                                                <Label className="text-slate-300">Backend Server URL</Label>
+                                                <Input
+                                                    value={serverUrl}
+                                                    onChange={(e) => setServerUrl(e.target.value)}
+                                                    placeholder="https://your-backend.onrender.com"
+                                                    className="bg-slate-800/50 border-white/5 focus:border-primary/50 transition-all font-mono text-sm"
+                                                />
+                                                <p className="text-xs text-slate-500">
+                                                    Enter the full URL of your active Render deployment.
+                                                </p>
+                                            </div>
+                                            <Button
+                                                onClick={handleSaveServer}
+                                                className="w-full mt-2 h-12 bg-primary hover:bg-primary/90"
+                                            >
+                                                <Globe className="w-4 h-4 mr-2" />
+                                                Establish Uplink
+                                            </Button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowServerConfig(false)}
+                                                className="text-sm text-center text-slate-400 hover:text-white"
+                                            >
+                                                Cancel Connection
+                                            </button>
+                                        </motion.div>
+                                    ) : !isAdminMode ? (
                                         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                                             <div className="space-y-2 group">
                                                 <Label htmlFor="username" className="text-slate-300 group-focus-within:text-primary transition-colors">Username</Label>
@@ -363,15 +378,24 @@ export default function Auth() {
                                                     {isLogin ? "Need a workspace? Register here" : "Return to analyst portal"}
                                                 </button>
 
-                                                {!isAdminMode && (
+                                                <div className="flex justify-center gap-4">
+                                                    {!isAdminMode && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setIsAdminMode(true)}
+                                                            className="text-[10px] text-slate-500 hover:text-red-400 transition-all uppercase tracking-[0.3em] font-bold opacity-50 hover:opacity-100"
+                                                        >
+                                                            [ Internal Override Access ]
+                                                        </button>
+                                                    )}
                                                     <button
                                                         type="button"
-                                                        onClick={() => setIsAdminMode(true)}
-                                                        className="text-[10px] text-slate-500 hover:text-red-400 transition-all uppercase tracking-[0.3em] font-bold opacity-50 hover:opacity-100"
+                                                        onClick={() => setShowServerConfig(true)}
+                                                        className="text-[10px] text-slate-500 hover:text-blue-400 transition-all uppercase tracking-[0.3em] font-bold opacity-50 hover:opacity-100"
                                                     >
-                                                        [ Internal Override Access ]
+                                                        [ Network Config ]
                                                     </button>
-                                                )}
+                                                </div>
                                             </div>
                                         </form>
                                     ) : (

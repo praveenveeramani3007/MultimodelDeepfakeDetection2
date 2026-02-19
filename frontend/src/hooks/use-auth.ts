@@ -1,12 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { User } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/api";
 
 async function fetchUser(): Promise<User | null> {
   try {
-    const response = await fetch("/api/auth/user", {
-      credentials: "include",
-    });
+    const response = await apiRequest("/api/auth/user");
 
     if (response.status === 401 || response.status === 404) {
       return null;
@@ -14,17 +13,17 @@ async function fetchUser(): Promise<User | null> {
 
     const contentType = response.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
+      // If we get HTML (like a 404 page from GitHub Pages), treat as not logged in
       return null;
     }
 
     if (!response.ok) {
-      // throw new Error(`${response.status}: ${response.statusText}`);
-      return null; // Fail gracefully for demo
+      return null;
     }
 
     return await response.json();
   } catch (error) {
-    console.warn("Auth check failed (likely offline or static deployment):", error);
+    console.warn("Auth check failed:", error);
     return null;
   }
 }
@@ -42,15 +41,18 @@ export function useAuth() {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: any) => {
-      const res = await fetch("/api/login", {
+      const res = await apiRequest("/api/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
-        credentials: "include",
       });
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Login failed");
+        // Try to parse JSON, fail gracefully if it's not JSON (e.g. 404 HTML)
+        try {
+          const error = await res.json();
+          throw new Error(error.message || "Login failed");
+        } catch (e: any) {
+          throw new Error(`Login failed:Server Connection Error (${res.status})`); 
+        }
       }
       return res.json();
     },
@@ -65,15 +67,17 @@ export function useAuth() {
 
   const registerMutation = useMutation({
     mutationFn: async (credentials: any) => {
-      const res = await fetch("/api/register", {
+      const res = await apiRequest("/api/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
-        credentials: "include",
       });
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Registration failed");
+        try {
+          const error = await res.json();
+          throw new Error(error.message || "Registration failed");
+        } catch (e: any) {
+           throw new Error(`Registration failed: Server Connection Error (${res.status})`); 
+        }
       }
       return res.json();
     },
@@ -87,11 +91,11 @@ export function useAuth() {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await fetch("/api/logout", { method: "POST", credentials: "include" });
+      await apiRequest("/api/logout", { method: "POST" });
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/auth/user"], null);
-      window.location.href = "/";
+      window.location.href = "/"; // Refresh to clear state
     },
   });
 
