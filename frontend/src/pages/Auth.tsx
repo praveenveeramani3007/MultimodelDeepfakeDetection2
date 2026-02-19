@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ShieldCheck, UserPlus, LogIn, Loader2, Cpu, Globe, Lock, Shield } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
+import * as api from "@/lib/api";
 
 function VerisightLogo({ className }: { className?: string }) {
     return (
@@ -118,20 +119,16 @@ export default function Auth() {
 
     useEffect(() => {
         // Load existing server URL
-        import("@/lib/api").then(api => {
-            setServerUrl(api.getApiUrl());
-        });
+        setServerUrl(api.getApiUrl());
     }, []);
 
     const handleSaveServer = () => {
-        import("@/lib/api").then(api => {
-            let url = serverUrl.trim();
-            // Remove trailing slash
-            url = url.replace(/\/$/, "");
-            api.setApiUrl(url);
-            setShowServerConfig(false);
-            window.location.reload(); // Reload to apply changes
-        });
+        let url = serverUrl.trim();
+        // Remove trailing slash
+        url = url.replace(/\/$/, "");
+        api.setApiUrl(url);
+        setShowServerConfig(false);
+        window.location.reload(); // Reload to apply changes
     };
 
     return (

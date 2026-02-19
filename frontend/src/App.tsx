@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import React, { Suspense, lazy } from "react";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Lazy Loaded Pages
 const Landing = lazy(() => import("@/pages/Landing"));
@@ -71,9 +72,11 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Router />
-        <ChatBot />
-        <Toaster />
+        <ErrorBoundary>
+          <Router />
+          <ChatBot />
+          <Toaster />
+        </ErrorBoundary>
       </TooltipProvider>
     </QueryClientProvider>
   );
