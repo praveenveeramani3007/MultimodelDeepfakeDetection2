@@ -17,15 +17,15 @@ export const analysisResults = pgTable("analysis_results", {
   fileName: text("file_name").notNull(),
   fileUrl: text("file_url").notNull(), // URL or base64 data URI (if small)
   fileType: text("file_type").notNull(), // 'image', 'audio', 'video'
-  
+
   // Sentiment Analysis
   sentimentLabel: text("sentiment_label"), // Positive, Negative, Neutral
   sentimentScore: integer("sentiment_score"), // 0-100 confidence
-  
+
   // Authenticity/Deepfake Analysis
   authenticityLabel: text("authenticity_label"), // Real, Fake
   authenticityScore: integer("authenticity_score"), // 0-100 confidence (probability of being Real)
-  
+
   // Detailed JSON results (frame analysis, transcript, etc.)
   details: jsonb("details").$type<{
     transcript?: string;
@@ -34,7 +34,7 @@ export const analysisResults = pgTable("analysis_results", {
     frameSentiments?: { time: number; label: string }[];
     reasoning?: string;
   }>(),
-  
+
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -47,9 +47,16 @@ export const analysisResultsRelations = relations(analysisResults, ({ one }) => 
 }));
 
 // === BASE SCHEMAS ===
-export const insertAnalysisSchema = createInsertSchema(analysisResults).omit({ 
-  id: true, 
-  createdAt: true 
+export const insertAnalysisSchema = z.object({
+  userId: z.string(),
+  fileName: z.string(),
+  fileUrl: z.string(),
+  fileType: z.string(),
+  sentimentLabel: z.string().nullable().optional(),
+  sentimentScore: z.number().nullable().optional(),
+  authenticityLabel: z.string().nullable().optional(),
+  authenticityScore: z.number().nullable().optional(),
+  details: z.any().nullable().optional(),
 });
 
 // === EXPLICIT API CONTRACT TYPES ===

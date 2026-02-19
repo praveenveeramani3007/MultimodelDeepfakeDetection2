@@ -47,7 +47,7 @@ export const api = {
       path: '/api/analysis/upload',
       input: z.object({
         fileName: z.string(),
-        fileType: z.enum(['image', 'audio', 'video']),
+        fileType: z.enum(['image', 'audio', 'video', 'text']),
         fileData: z.string().describe("Base64 encoded file data"),
       }),
       responses: {

@@ -1,0 +1,14 @@
+flask
+flask-cors
+google-genai
+python-dotenv
+textblob
+numpy
+opencv-python-headless
+librosa
+reportlab
+werkzeug
+scipy
+soundfile
+mysql-connector-python
+Pillow
