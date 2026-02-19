@@ -1,3 +1,4 @@
+import logo from "@/assets/logo.png";
 import { useAnalysisHistory } from "@/hooks/use-analysis";
 import { Sidebar } from "@/components/Sidebar";
 import { AnalysisCard } from "@/components/AnalysisCard";
@@ -25,7 +26,7 @@ export default function Home() {
         <header className="mb-8 xxs:mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4 xxs:gap-6">
           <div className="flex-1">
             <div className="flex items-center gap-4 mb-4">
-              <img src="/logo.png" alt="VeriSight Logo" className="w-12 h-12 xxs:w-16 xxs:h-16 object-contain" />
+              <img src={logo} alt="VeriSight Logo" className="w-12 h-12 xxs:w-16 xxs:h-16 object-contain" />
               <motion.h1
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}

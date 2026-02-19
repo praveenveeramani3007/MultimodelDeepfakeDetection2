@@ -51,7 +51,7 @@ export function useAuth() {
           const error = await res.json();
           throw new Error(error.message || "Login failed");
         } catch (e: any) {
-          throw new Error(`Login failed:Server Connection Error (${res.status})`); 
+          throw new Error(`Login failed:Server Connection Error (${res.status})`);
         }
       }
       return res.json();
@@ -76,13 +76,15 @@ export function useAuth() {
           const error = await res.json();
           throw new Error(error.message || "Registration failed");
         } catch (e: any) {
-           throw new Error(`Registration failed: Server Connection Error (${res.status})`); 
+          throw new Error(`Registration failed: Server Connection Error (${res.status})`);
         }
       }
       return res.json();
     },
-    onSuccess: () => {
-      toast({ title: "Registration Successful", description: "You can now log in with your credentials." });
+    onSuccess: async (data, variables) => {
+      toast({ title: "Registration Successful", description: "Logging you in now..." });
+      // Auto-login with the same credentials
+      loginMutation.mutate({ username: variables.username, password: variables.password });
     },
     onError: (error: Error) => {
       toast({ title: "Registration Failed", description: error.message, variant: "destructive" });

@@ -1,13 +1,18 @@
 export const getApiUrl = (): string => {
-    // Check localStorage for user-configured backend
+    // In development, ALWAYS return empty string to use Vite proxy (forwards to localhost:5000)
+    // This overrides any localStorage setting to prevent "Failed to fetch" errors from stale configs
+    if (import.meta.env.DEV) {
+        return "";
+    }
+
+    // Check localStorage for user-configured backend (only in production)
     const stored = localStorage.getItem("api_url");
     if (stored) {
         // Remove trailing slash if present
         return stored.replace(/\/$/, "");
     }
 
-    // Default for development (proxy) or if not set (will fail on GH Pages until set)
-    // Hardcoded fallback for immediate user success:
+    // Default for production
     return "https://multimodeldeepfakedetection2.onrender.com";
 };
 

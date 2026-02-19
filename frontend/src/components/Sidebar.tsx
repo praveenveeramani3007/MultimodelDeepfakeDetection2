@@ -3,6 +3,7 @@ import { LayoutDashboard, History, LogOut, ShieldCheck, PieChart, UploadCloud, M
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
+import logo from "@/assets/logo.png";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"; // Assuming Sheet exists, if not I'll build custom. Actually, let's use custom to be safe.
 
 export function Sidebar() {
@@ -20,7 +21,7 @@ export function Sidebar() {
       <div className="p-6 border-b border-border/50">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 flex-shrink-0">
-            <img src="/logo.png" alt="VeriSight Logo" className="w-full h-full object-contain" />
+            <img src={logo} alt="VeriSight Logo" className="w-full h-full object-contain" />
           </div>
           <div>
             <h1 className="font-display font-bold text-lg tracking-tight">VeriSight</h1>

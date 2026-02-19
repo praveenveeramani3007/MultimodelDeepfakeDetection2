@@ -745,7 +745,25 @@ def generate_certificate(result_data, logo_path=None, image_data=None):
             pil_img = Image.open(img_io)
             reader = ImageReader(pil_img)
             
-            p.drawImage(reader, width/2 - 100, 120, width=200, height=150, preserveAspectRatio=True, mask='auto', anchor='c')
+            # Calculate dynamic position to avoid overlap
+            # Ensure we have at least 160px space (150px image + 10px padding) above footer (approx y=50)
+            required_height = 130 
+            
+            # If text pushed too far down, start a new page or just clamp (simple clamp for now)
+            # Ideally y_curr is where the text ended.
+            image_y = y_curr - required_height - 20
+            
+            if image_y < 60:
+                # Not enough space, just put it at bottom and overlay? 
+                # Or simplistic "best effort" - shrink it or fail gracefully.
+                # Let's try to fit it in available space or just place it at bottom with truncation risk if report is huge.
+                # Better approach for this user: Fixed position at bottom was standard, but text overran.
+                # We should stop text WRITING before hitting the bottom area if we want to keep image at bottom.
+                # BUT the user said "alignment", implying flow.
+                # Let's use the dynamic flow.
+                image_y = max(60, image_y) 
+
+            p.drawImage(reader, width/2 - 100, image_y, width=200, height=120, preserveAspectRatio=True, mask='auto', anchor='c')
         except Exception:
             pass
             
