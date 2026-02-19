@@ -17,7 +17,12 @@ load_dotenv()
 app = Flask(__name__)
 # Secret key for signing cookies (though we use our own session token mechanism, Flask needs this)
 app.secret_key = os.getenv("SECRET_KEY", "dev-secret-key-change-in-prod")
-CORS(app, supports_credentials=True)
+# Strict CORS for production (GitHub Pages) + Dev
+CORS(app, supports_credentials=True, origins=[
+    "https://praveenveeramani3007.github.io", 
+    "http://localhost:5173", 
+    "http://127.0.0.1:5173"
+])
 
 # Database setup
 DB_PATH = 'database.db'
