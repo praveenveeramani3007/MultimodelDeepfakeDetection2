@@ -113,6 +113,17 @@ export default function Auth() {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
 
+    // Admin Fields
+    const [adminName, setAdminName] = useState("");
+    const [adminDob, setAdminDob] = useState("");
+    const [adminPassword, setAdminPassword] = useState("");
+    const [adminError, setAdminError] = useState("");
+
+    const { loginMutation, registerMutation, user } = useAuth();
+    const [, setLocation] = useLocation();
+
+    const isLoading = loginMutation.isPending || registerMutation.isPending;
+
     // Server Config State
     const [showServerConfig, setShowServerConfig] = useState(false);
     const [serverUrl, setServerUrl] = useState("");
@@ -121,6 +132,35 @@ export default function Auth() {
         // Load existing server URL
         setServerUrl(api.getApiUrl());
     }, []);
+
+    useEffect(() => {
+        if (user) {
+            setLocation("/");
+        }
+    }, [user, setLocation]);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (isLogin) {
+            loginMutation.mutate({ username, password });
+        } else {
+            registerMutation.mutate({ username, password, firstName, lastName });
+        }
+    };
+
+    const handleAdminSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setAdminError("");
+
+        // UNIQUE CREDENTIALS CHECK
+        if (adminName === "praveenV" && adminDob === "300704" && adminPassword === "Vpraveen6374416934") {
+            // Store admin state in session storage (simple for this case)
+            sessionStorage.setItem("isAdminAuthenticated", "true");
+            setLocation("/admin-portal");
+        } else {
+            setAdminError("ACCESS DENIED: Credentials mismatch. Initiating failure protocol.");
+        }
+    };
 
     const handleSaveServer = () => {
         let url = serverUrl.trim();
