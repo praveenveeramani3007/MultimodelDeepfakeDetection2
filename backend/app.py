@@ -464,4 +464,5 @@ if __name__ == '__main__':
     # Exclude site-packages and cv2 to prevent infinite reload loops
     # Using exclude_patterns directly requires werkzeug, for Flask run we pass via **options
     # Flask < 1.0 might fail, but modern Flask passes kwargs to run_simple
-    app.run(port=5000, debug=True, use_reloader=True, extra_files=[], exclude_patterns=["*site-packages*", "*cv2*"])
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)

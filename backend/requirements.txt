@@ -12,3 +12,4 @@ scipy
 soundfile
 mysql-connector-python
 Pillow
+gunicorn
