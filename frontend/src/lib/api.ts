@@ -7,7 +7,8 @@ export const getApiUrl = (): string => {
     }
 
     // Default for development (proxy) or if not set (will fail on GH Pages until set)
-    return "";
+    // Hardcoded fallback for immediate user success:
+    return "https://multimodeldeepfakedetection2.onrender.com";
 };
 
 export const setApiUrl = (url: string) => {

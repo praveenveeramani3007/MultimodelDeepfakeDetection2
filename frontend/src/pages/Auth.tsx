@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+// Cache bust: Force rebuild for Auth handler fix 2
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
