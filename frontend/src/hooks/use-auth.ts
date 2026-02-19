@@ -3,19 +3,30 @@ import type { User } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 
 async function fetchUser(): Promise<User | null> {
-  const response = await fetch("/api/auth/user", {
-    credentials: "include",
-  });
+  try {
+    const response = await fetch("/api/auth/user", {
+      credentials: "include",
+    });
 
-  if (response.status === 401) {
+    if (response.status === 401 || response.status === 404) {
+      return null;
+    }
+
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      return null;
+    }
+
+    if (!response.ok) {
+      // throw new Error(`${response.status}: ${response.statusText}`);
+      return null; // Fail gracefully for demo
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.warn("Auth check failed (likely offline or static deployment):", error);
     return null;
   }
-
-  if (!response.ok) {
-    throw new Error(`${response.status}: ${response.statusText}`);
-  }
-
-  return response.json();
 }
 
 export function useAuth() {

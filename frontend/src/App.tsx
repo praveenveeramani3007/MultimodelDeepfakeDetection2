@@ -35,28 +35,34 @@ function Router() {
 
   return (
     <RouterBase base={base}>
-      <Switch>
-        <Route path="/landing" component={Landing} />
-        <Route path="/auth" component={Auth} />
-        <Route path="/admin-portal" component={AdminDashboard} />
+      <Suspense fallback={
+        <div className="flex h-screen w-screen items-center justify-center bg-background">
+          <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        </div>
+      }>
+        <Switch>
+          <Route path="/landing" component={Landing} />
+          <Route path="/auth" component={Auth} />
+          <Route path="/admin-portal" component={AdminDashboard} />
 
-        {!user ? (
-          <Route component={Auth} />
-        ) : (
-          <Route path="/" component={Home} />
-        )}
+          {!user ? (
+            <Route component={Auth} />
+          ) : (
+            <Route path="/" component={Home} />
+          )}
 
-        {/* Protected Routes handled via auth check above, but for clean routing we define them */}
-        {user && (
-          <>
-            <Route path="/history" component={History} />
-            <Route path="/analysis/:id" component={Report} />
-            <Route path="/upload" component={Upload} />
-            {/* Fallback for authenticated users */}
-            <Route component={NotFound} />
-          </>
-        )}
-      </Switch>
+          {/* Protected Routes handled via auth check above, but for clean routing we define them */}
+          {user && (
+            <>
+              <Route path="/history" component={History} />
+              <Route path="/analysis/:id" component={Report} />
+              <Route path="/upload" component={Upload} />
+              {/* Fallback for authenticated users */}
+              <Route component={NotFound} />
+            </>
+          )}
+        </Switch>
+      </Suspense>
     </RouterBase>
   );
 }
