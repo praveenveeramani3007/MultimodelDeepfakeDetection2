@@ -13,7 +13,9 @@ export const getApiUrl = (): string => {
     }
 
     // Default for production
-    return "https://multimodeldeepfakedetection2.onrender.com";
+    const prodUrl = "https://multimodeldeepfakedetection2.onrender.com";
+    console.log("API URL configured as:", prodUrl);
+    return prodUrl;
 };
 
 export const setApiUrl = (url: string) => {
