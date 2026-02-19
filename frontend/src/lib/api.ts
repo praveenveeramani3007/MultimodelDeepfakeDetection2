@@ -8,8 +8,15 @@ export const getApiUrl = (): string => {
     // Check localStorage for user-configured backend (only in production)
     const stored = localStorage.getItem("api_url");
     if (stored) {
-        // Remove trailing slash if present
-        return stored.replace(/\/$/, "");
+        // SAFETY CHECK: In production, ignore 'localhost' or '127.0.0.1'
+        // This prevents the app from breaking if a user accidentally saves a dev URL
+        if (!import.meta.env.DEV && (stored.includes("localhost") || stored.includes("127.0.0.1"))) {
+            console.warn("Ignoring invalid local API URL in production:", stored);
+            localStorage.removeItem("api_url"); // Auto-cleanup
+        } else {
+            // Remove trailing slash if present
+            return stored.replace(/\/$/, "");
+        }
     }
 
     // Default for production
