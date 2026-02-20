@@ -4,3 +4,9 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+# Backend secrets and local data — never commit these
+backend/.env
+backend/*.db
+__pycache__/
+*.pyc
+*.pyo

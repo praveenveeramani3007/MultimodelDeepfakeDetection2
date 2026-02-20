@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { User } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/api";
+import { apiRequest, setSessionToken } from "@/lib/api";
 
 async function fetchUser(): Promise<User | null> {
   try {
@@ -56,7 +56,12 @@ export function useAuth() {
       }
       return res.json();
     },
-    onSuccess: (user: User) => {
+    onSuccess: (data: any) => {
+      // Save the session token to localStorage for cross-origin Authorization header
+      if (data.sessionToken) {
+        setSessionToken(data.sessionToken);
+      }
+      const { sessionToken, ...user } = data;
       queryClient.setQueryData(["/api/auth/user"], user);
       toast({ title: "Welcome back!", description: `Logged in as ${user.username}` });
     },
@@ -96,8 +101,11 @@ export function useAuth() {
       await apiRequest("/api/logout", { method: "POST" });
     },
     onSuccess: () => {
+      // Clear the stored session token so future requests stop sending it
+      setSessionToken(null);
       queryClient.setQueryData(["/api/auth/user"], null);
-      window.location.href = "/"; // Refresh to clear state
+      // Redirect to the app's base path (handles GitHub Pages sub-path)
+      window.location.href = import.meta.env.BASE_URL || "/";
     },
   });
 

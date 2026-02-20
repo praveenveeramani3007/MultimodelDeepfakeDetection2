@@ -19,10 +19,11 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev-secret-key-change-in-prod")
 # Strict CORS for production (GitHub Pages) + Dev
 CORS(app, supports_credentials=True, origins=[
-    "https://praveenveeramani3007.github.io", 
-    "http://localhost:5173", 
+    "https://praveenveeramani3007.github.io",
+    "http://localhost:5173",
     "http://127.0.0.1:5173"
-])
+], allow_headers=["Content-Type", "Authorization"],
+   expose_headers=["Content-Type", "Authorization"])
 
 # Database setup
 DB_PATH = 'database.db'
@@ -89,7 +90,13 @@ init_db()
 
 # Helper to get current user from session cookie
 def get_current_user_helper():
-    token = request.cookies.get('session_token')
+    # Try Authorization: Bearer <token> header first (for cross-origin requests from GitHub Pages)
+    auth_header = request.headers.get('Authorization', '')
+    if auth_header.startswith('Bearer '):
+        token = auth_header[len('Bearer '):].strip()
+    else:
+        # Fallback to cookie (works in same-origin / local dev)
+        token = request.cookies.get('session_token')
     if not token:
         return None
     
@@ -172,11 +179,13 @@ def login():
             conn.commit()
             conn.close()
 
-            # Create Response with Cookie
+            # Return token in JSON body so the frontend can store it in localStorage.
+            # This is required for cross-origin (GitHub Pages -> Render) because SameSite=Lax
+            # cookies are silently blocked by browsers on cross-origin requests.
+            user_data["sessionToken"] = token
             resp = make_response(jsonify(user_data))
-            # Set httpOnly cookie for security (prevent XSS access to token)
-            # samesite='Lax' is good for normal navigation
-            resp.set_cookie('session_token', token, httponly=True, samesite='Lax', max_age=30*24*60*60) # 30 days
+            # Also set as SameSite=None;Secure cookie (works when both on HTTPS same-origin)
+            resp.set_cookie('session_token', token, httponly=True, samesite='None', secure=True, max_age=30*24*60*60) # 30 days
             return resp
         
         conn.close()
@@ -204,7 +213,12 @@ def get_current_user():
 @app.route('/api/logout', methods=['POST', 'GET'])
 def logout():
     try:
-        token = request.cookies.get('session_token')
+        # Read token from Authorization header first, then cookie fallback
+        auth_header = request.headers.get('Authorization', '')
+        if auth_header.startswith('Bearer '):
+            token = auth_header[len('Bearer '):].strip()
+        else:
+            token = request.cookies.get('session_token')
         conn = get_db_connection()
         
         if token:
