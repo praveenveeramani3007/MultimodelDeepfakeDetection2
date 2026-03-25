@@ -98,7 +98,12 @@ export function useAuth() {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("/api/logout", { method: "POST" });
+      try {
+        await apiRequest("/api/logout", { method: "POST" });
+      } catch (e) {
+        // Ignore errors (e.g. backend down) so we still log out locally
+        console.warn("Logout request failed, clearing local session anyway");
+      }
     },
     onSuccess: () => {
       // Clear the stored session token so future requests stop sending it
