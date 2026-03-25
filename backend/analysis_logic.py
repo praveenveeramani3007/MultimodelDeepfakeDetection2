@@ -6,18 +6,23 @@ import numpy as np
 import scipy.stats
 from textblob import TextBlob
 from PIL import Image, ImageChops, ExifTags
-import librosa
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from datetime import datetime
 import math
 
-# --- OPTIONAL IMPORTS ---
+# --- OPTIONAL IMPORTS (lazy-loaded to avoid OOM on small servers) ---
 try:
     import cv2
     CV2_AVAILABLE = True
 except ImportError:
     CV2_AVAILABLE = False
+
+try:
+    import librosa
+    LIBROSA_AVAILABLE = True
+except ImportError:
+    LIBROSA_AVAILABLE = False
 
 # --- 1. CORE DATA STRUCTURES ---
 
@@ -244,6 +249,13 @@ def analyze_audio_native(audio_bytes):
     """
     Deterministic Audio Forensics: Spectral Flatness, Cutoff, Silence Detection.
     """
+    if not LIBROSA_AVAILABLE:
+        return {
+            "authenticity_label": "Inconclusive",
+            "authenticity_score": 50,
+            "reasoning": "Audio analysis library not available on this server.",
+            "details": {}
+        }
     try:
         with open("temp_audio_forensic.wav", "wb") as f:
             f.write(audio_bytes)
