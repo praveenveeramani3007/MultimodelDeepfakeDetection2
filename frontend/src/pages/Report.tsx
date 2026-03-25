@@ -61,7 +61,10 @@ export default function Report() {
     );
   }
 
-  const isReal = result.authenticityLabel === "Real" || result.authenticityLabel === "Likely Real";
+  const label = result.authenticityLabel || "";
+  const isReal = label === "Real" || label === "Likely Organic" || label === "Likely Real";
+  const isSynthetic = label === "Fake" || label === "Likely Synthetic" || label === "Likely Fake";
+  const isInconclusive = !isReal && !isSynthetic;
   const authScore = result.authenticityScore || 0;
 
   // The authenticity score directly represents the 'Human/Real' confidence
@@ -145,10 +148,12 @@ export default function Report() {
                   "px-6 py-3.5 md:px-8 md:py-4 rounded-[1.2rem] md:rounded-[1.5rem] border-2 flex items-center justify-center gap-3 md:gap-4 font-black text-base md:text-xl tracking-tighter shadow-xl shrink-0 self-start md:self-center w-fit",
                   isReal
                     ? "bg-green-500/10 text-green-500 border-green-500/20"
+                    : isInconclusive
+                    ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
                     : "bg-red-500/10 text-red-500 border-red-500/20"
                 )}>
                   {isReal ? <ShieldCheck className="w-6 h-6 md:w-7 md:h-7" /> : <ShieldAlert className="w-6 h-6 md:w-7 md:h-7" />}
-                  <span className="whitespace-nowrap">{result.authenticityLabel?.toUpperCase()}</span>
+                  <span className="whitespace-nowrap">{label.toUpperCase()}</span>
                 </div>
               </div>
 

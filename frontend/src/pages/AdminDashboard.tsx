@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { getApiUrl, getSessionToken } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,7 +52,10 @@ export default function AdminDashboard() {
 
     const fetchSummary = async () => {
         try {
-            const res = await fetch("/api/admin/summary");
+            const token = getSessionToken();
+            const res = await fetch(`${getApiUrl()}/api/admin/summary`, {
+                headers: token ? { "Authorization": `Bearer ${token}` } : {},
+            });
             const data = await res.json();
             setActivities(data.activities || []);
             setUsers(data.users || []);

@@ -56,7 +56,10 @@ export default function History() {
 
             <div className="space-y-3">
               {analyses?.map((item) => {
-                const isReal = item.authenticityLabel === "Real" || item.authenticityLabel === "Likely Real";
+                const label = item.authenticityLabel || "";
+                const isReal = label === "Real" || label === "Likely Organic" || label === "Likely Real";
+                const isSynthetic = label === "Fake" || label === "Likely Synthetic" || label === "Likely Fake";
+                const isInconclusive = !isReal && !isSynthetic;
                 return (
                   <div
                     key={item.id}
@@ -94,7 +97,7 @@ export default function History() {
                         <div className="flex items-center gap-2">
                           <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                             <div
-                              className={cn("h-full rounded-full transition-all duration-500", isReal ? 'bg-primary' : 'bg-red-500')}
+                              className={cn("h-full rounded-full transition-all duration-500", isReal ? 'bg-green-500' : isInconclusive ? 'bg-yellow-500' : 'bg-red-500')}
                               style={{ width: `${item.authenticityScore}%` }}
                             />
                           </div>
@@ -109,6 +112,8 @@ export default function History() {
                           "inline-flex items-center gap-1.5 px-2 xxs:px-2.5 py-1 rounded-full text-[9px] xxs:text-[10px] font-bold uppercase tracking-tight border whitespace-nowrap",
                           isReal
                             ? "bg-green-500/10 text-green-500 border-green-500/20"
+                            : isInconclusive
+                            ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
                             : "bg-red-500/10 text-red-500 border-red-500/20"
                         )}>
                           <Shield className="w-3 h-3" />
