@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { FileAudio, FileImage, FileVideo, ShieldAlert, ShieldCheck, ArrowRight } from "lucide-react";
+import { FileAudio, FileImage, FileVideo, ShieldAlert, ShieldCheck, ShieldQuestion, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import type { AnalysisResult } from "@shared/schema";
 import { cn } from "@/lib/utils";
@@ -9,7 +9,10 @@ interface AnalysisCardProps {
 }
 
 export function AnalysisCard({ analysis }: AnalysisCardProps) {
-  const isReal = analysis.authenticityLabel === "Real";
+  const label = analysis.authenticityLabel || "";
+  const isReal = label === "Real" || label === "Likely Organic" || label === "Likely Real";
+  const isSynthetic = label === "Fake" || label === "Likely Synthetic" || label === "Likely Fake";
+  const isInconclusive = !isReal && !isSynthetic;
   const isPositive = analysis.sentimentLabel === "Positive";
   
   const Icon = analysis.fileType === "audio" ? FileAudio : analysis.fileType === "video" ? FileVideo : FileImage;
@@ -30,10 +33,12 @@ export function AnalysisCard({ analysis }: AnalysisCardProps) {
           "px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5",
           isReal 
             ? "bg-green-500/10 text-green-500 border-green-500/20"
+            : isInconclusive
+            ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
             : "bg-red-500/10 text-red-500 border-red-500/20"
         )}>
-          {isReal ? <ShieldCheck className="w-3 h-3" /> : <ShieldAlert className="w-3 h-3" />}
-          {analysis.authenticityLabel?.toUpperCase()}
+          {isReal ? <ShieldCheck className="w-3 h-3" /> : isInconclusive ? <ShieldQuestion className="w-3 h-3" /> : <ShieldAlert className="w-3 h-3" />}
+          {label.toUpperCase()}
         </div>
       </div>
 
@@ -50,7 +55,7 @@ export function AnalysisCard({ analysis }: AnalysisCardProps) {
         <div>
           <p className="text-xs text-muted-foreground mb-1">Authenticity</p>
           <div className="flex items-baseline gap-1">
-            <span className={cn("text-xl font-bold font-mono", isReal ? "text-green-500" : "text-red-500")}>
+            <span className={cn("text-xl font-bold font-mono", isReal ? "text-green-500" : isInconclusive ? "text-yellow-500" : "text-red-500")}>
               {analysis.authenticityScore}%
             </span>
           </div>

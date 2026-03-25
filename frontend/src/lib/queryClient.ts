@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { getApiUrl, getSessionToken } from "@/lib/api";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -12,9 +13,15 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  const baseUrl = getApiUrl();
+  const fullUrl = url.startsWith("http") ? url : `${baseUrl}${url}`;
+  const token = getSessionToken();
+  const res = await fetch(fullUrl, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers: {
+      ...(data ? { "Content-Type": "application/json" } : {}),
+      ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+    },
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
@@ -29,8 +36,13 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    const baseUrl = getApiUrl();
+    const path = queryKey.join("/") as string;
+    const url = path.startsWith("http") ? path : `${baseUrl}${path}`;
+    const token = getSessionToken();
+    const res = await fetch(url, {
       credentials: "include",
+      headers: token ? { "Authorization": `Bearer ${token}` } : {},
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
