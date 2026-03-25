@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useRoute } from "wouter";
 import { useAnalysisResult } from "@/hooks/use-analysis";
+import { getApiUrl } from "@/lib/api";
 import { Sidebar } from "@/components/Sidebar";
 import { Loader2, ArrowLeft, ShieldCheck, ShieldAlert, Download, Share2, Info, Activity, Fingerprint, FileText, Calendar } from "lucide-react";
 import { Link } from "wouter";
@@ -18,7 +19,7 @@ export default function Report() {
   const handleDownload = async () => {
     try {
       setIsDownloading(true);
-      const response = await fetch(`/api/analysis/certificate/${id}`);
+      const response = await fetch(`${getApiUrl()}/api/analysis/certificate/${id}`);
       if (!response.ok) throw new Error("Download failed");
 
       const blob = await response.blob();
@@ -332,7 +333,7 @@ export default function Report() {
               </button>
             </div>
             <iframe
-              src={`/api/analysis/certificate/${id}`}
+              src={`${getApiUrl()}/api/analysis/certificate/${id}`}
               className="w-full h-full"
               title="Certificate Preview"
             />
