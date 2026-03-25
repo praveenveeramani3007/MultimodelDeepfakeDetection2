@@ -11,18 +11,11 @@ from reportlab.pdfgen import canvas
 from datetime import datetime
 import math
 
-# --- OPTIONAL IMPORTS (lazy-loaded to avoid OOM on small servers) ---
-try:
-    import cv2
-    CV2_AVAILABLE = True
-except ImportError:
-    CV2_AVAILABLE = False
+import importlib.util
 
-try:
-    import librosa
-    LIBROSA_AVAILABLE = True
-except ImportError:
-    LIBROSA_AVAILABLE = False
+# --- OPTIONAL IMPORTS (lazy-loaded to avoid OOM on small servers) ---
+CV2_AVAILABLE = importlib.util.find_spec("cv2") is not None
+LIBROSA_AVAILABLE = importlib.util.find_spec("librosa") is not None
 
 # --- 1. CORE DATA STRUCTURES ---
 
@@ -256,6 +249,8 @@ def analyze_audio_native(audio_bytes):
             "reasoning": "Audio analysis library not available on this server.",
             "details": {}
         }
+        
+    import librosa
     try:
         with open("temp_audio_forensic.wav", "wb") as f:
             f.write(audio_bytes)
@@ -812,6 +807,7 @@ def analyze_region_details(pil_image):
         return results
 
     try:
+        import cv2
         # Convert PIL to OpenCV format
         img_np = np.array(pil_image.convert('RGB'))
         img_cv = img_np[:, :, ::-1].copy() # RGB to BGR
@@ -875,9 +871,9 @@ def analyze_texture(roi):
     entropy = -np.sum(probs * np.log2(probs + 1e-10))
     
     # 2. Laplacian Variance (Sharpness/Blur)
-    # 2. Laplacian Variance (Sharpness/Blur)
     sharpness = 0
     if CV2_AVAILABLE:
+        import cv2
         laplacian = cv2.Laplacian(roi, cv2.CV_64F)
         sharpness = laplacian.var()
     
