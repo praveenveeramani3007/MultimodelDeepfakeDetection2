@@ -15,8 +15,9 @@ import analysis_logic
 load_dotenv()
 
 app = Flask(__name__)
-# Secret key for signing cookies (though we use our own session token mechanism, Flask needs this)
 app.secret_key = os.getenv("SECRET_KEY", "dev-secret-key-change-in-prod")
+# Allow uploads up to 20MB (base64 encoded image = ~1.33x file size, plus JSON overhead)
+app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024
 # Strict CORS for production (GitHub Pages) + Dev
 CORS(app, supports_credentials=True, origins=[
     "https://praveenveeramani3007.github.io",
@@ -302,6 +303,20 @@ def upload_analysis():
             "reasoning": "Standard video check passed.", "details": {}
         }
     
+    # Create a small thumbnail for storage so API responses stay small
+    file_url = file_data  # default (for audio, text, video)
+    if file_type == 'image':
+        try:
+            from PIL import Image
+            thumb_img = Image.open(io.BytesIO(decoded_bytes))
+            thumb_img.thumbnail((120, 120))
+            thumb_buf = io.BytesIO()
+            thumb_img.save(thumb_buf, format='JPEG', quality=60)
+            thumb_b64 = base64.b64encode(thumb_buf.getvalue()).decode('utf-8')
+            file_url = f"data:image/jpeg;base64,{thumb_b64}"
+        except Exception:
+            file_url = ""  # fallback gracefully
+
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('''
@@ -312,7 +327,7 @@ def upload_analysis():
             details
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
-        user['id'], file_name, file_data, file_type,
+        user['id'], file_name, file_url, file_type,
         res.get('sentiment_label'), res.get('sentiment_score'),
         res.get('authenticity_label'), res.get('authenticity_score'),
         json.dumps({
