@@ -83,7 +83,14 @@ def analyze_image_native(image_bytes):
     Deterministic Image Forensics: Metadata, ELA, Sensor Noise, Color Correlation.
     """
     try:
+        import gc
         img = Image.open(io.BytesIO(image_bytes))
+        
+        # OOM PREVENTION: Resize large images before forming uncompressed numpy arrays
+        max_dim = 1024
+        if img.width > max_dim or img.height > max_dim:
+            img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+            
         img_rgb = img.convert('RGB')
         checks = []
 
@@ -210,6 +217,20 @@ def analyze_image_native(image_bytes):
         # --- Advanced CV Analysis (Region Details) ---
         region_details = analyze_region_details(img)
         
+        img_format = img.format
+        img_dimensions = f"{img.size[0]}x{img.size[1]}"
+        
+        # --- Clean up large arrays to prevent OOM on Render 512MB ---
+        try:
+            del img_arr
+            del gray
+            del img_rgb
+            del img
+            import gc
+            gc.collect()
+        except:
+            pass
+
         return {
             "sentiment_label": "N/A",
             "sentiment_score": 0,
@@ -217,8 +238,8 @@ def analyze_image_native(image_bytes):
             "authenticity_score": score,
             "reasoning": reasoning,
             "details": {
-                "format": img.format,
-                "dimensions": f"{img.size[0]}x{img.size[1]}",
+                "format": img_format,
+                "dimensions": img_dimensions,
                 "checks": [vars(c) for c in checks],
                 **region_details # Merge detailed text fields
             }
