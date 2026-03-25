@@ -2,12 +2,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl, type AnalysisInput, type AnalysisResponse } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { apiRequest } from "@/lib/api";
 
 export function useAnalysisHistory() {
   return useQuery({
     queryKey: [api.analysis.list.path],
     queryFn: async () => {
-      const res = await fetch(api.analysis.list.path, { credentials: "include" });
+      const res = await apiRequest(api.analysis.list.path, { credentials: "include" });
       if (!res.ok) {
         if (res.status === 401) throw new Error("Unauthorized");
         throw new Error("Failed to fetch history");
@@ -22,7 +23,7 @@ export function useAnalysisResult(id: number) {
     queryKey: [api.analysis.get.path, id],
     queryFn: async () => {
       const url = buildUrl(api.analysis.get.path, { id });
-      const res = await fetch(url, { credentials: "include" });
+      const res = await apiRequest(url, { credentials: "include" });
       if (res.status === 404) return null;
       if (!res.ok) throw new Error("Failed to fetch result");
       return api.analysis.get.responses[200].parse(await res.json());
@@ -39,11 +40,10 @@ export function useUploadAnalysis() {
   return useMutation({
     mutationFn: async (data: AnalysisInput) => {
       const validated = api.analysis.upload.input.parse(data);
-      const res = await fetch(api.analysis.upload.path, {
+      const res = await apiRequest(api.analysis.upload.path, {
         method: api.analysis.upload.method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(validated),
-        credentials: "include",
       });
 
       if (!res.ok) {
@@ -77,9 +77,8 @@ export function useDeleteAnalysis() {
   return useMutation({
     mutationFn: async (id: number) => {
       const url = buildUrl(api.analysis.delete.path, { id });
-      const res = await fetch(url, {
+      const res = await apiRequest(url, {
         method: api.analysis.delete.method,
-        credentials: "include"
       });
       if (!res.ok) throw new Error("Failed to delete record");
     },
